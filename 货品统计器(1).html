@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>货品录入统计系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        :root {
+            --main: #a8e6cf;
+            --sub: #dcedc1;
+            --warm: #ffd3b6;
+            --pink: #ffaaa5;
+            --text: #555;
+            --white: #fff;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        body {
+            background: #f7f9f8;
+            color: var(--text);
+        }
+        .page {
+            display: none;
+            max-width: 550px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .page.active {
+            display: block;
+        }
+        .title {
+            text-align: center;
+            margin: 15px 0 25px;
+            font-size: 23px;
+            color: #666;
+        }
+        /* 下拉选择器样式 */
+        .select-group {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .select-item {
+            flex: 1;
+            min-width: 80px;
+        }
+        /* 输入区域 */
+        .input-item {
+            margin: 16px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 15px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            background: var(--white);
+        }
+        input:focus, select:focus {
+            border-color: var(--main);
+        }
+        /* 按钮 */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            margin: 10px 0;
+            background: var(--main);
+            color: #333;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn-sub {
+            background: var(--sub);
+        }
+        .btn-warm {
+            background: var(--warm);
+        }
+        .btn-del {
+            background: #ffaaa5;
+            color: #fff;
+        }
+        /* 货品标签 */
+        .tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        .tag {
+            background: var(--sub);
+            padding: 6px 11px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .del-btn {
+            background: #ffaaa5;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            line-height: 18px;
+            text-align: center;
+            cursor: pointer;
+            padding: 0;
+        }
+        /* 货品行 */
+        .goods-group {
+            margin: 20px 0;
+        }
+        .goods-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .goods-row select,
+        .goods-row input {
+            flex: 1;
+        }
+        /* 已录入房间列表 */
+        .record-list {
+            margin: 25px 0;
+            max-height: 280px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        .record-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .record-del {
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 14px;
+            flex-shrink: 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .record-info {
+            flex: 1;
+        }
+        .record-addr {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+        .record-goods {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        /* 表格 */
+        .table-box {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: var(--main);
+            padding: 11px;
+            border-radius: 6px;
+        }
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .date-row {
+            background: #f0f9f4;
+            font-weight: bold;
+            text-align: center;
+        }
+        .total-row {
+            background: #fff5e8;
+            font-weight: bold;
+            color: #ff7a59;
+        }
+        /* 任务列表样式 */
+        .task-list {
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .task-item {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-info {
+            flex: 1;
+        }
+        .task-date {
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 4px;
+        }
+        .task-goods {
+            font-size: 14px;
+            color: #666;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .task-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .task-edit {
+            background: var(--sub);
+            color: #333;
+        }
+        .task-delete {
+            background: var(--pink);
+            color: white;
+        }
+        /* 勾选框样式 */
+        .checkbox-cell {
+            cursor: pointer;
+        }
+        .checkbox-cell input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 新增首页：任务管理 -->
+    <div class="page active" id="page0">
+        <div class="title">货品统计任务管理</div>
+        <button class="btn" onclick="createNewTask()">创建新统计任务</button>
+        
+        <div class="input-item">
+            <label>以往统计任务</label>
+            <div class="task-list" id="taskList">
+                <div style="text-align:center; color:#999; padding:15px;">暂无历史任务</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页面1：日期+当日货品 -->
+    <div class="page" id="page1">
+        <div class="title">日期与货品设置</div>
+        <div class="select-group">
+            <div class="select-item">
+                <label>年份</label>
+                <select id="yearSelect">
+                    <!-- 动态填充2024-2030年 -->
+                </select>
+            </div>
+            <div class="select-item">
+                <label>月份</label>
+                <select id="monthSelect">
+                    <!-- 动态填充1-12月 -->
+                </select>
+            </div>
+            <div class="select-item">
+                <label>日期</label>
+                <select id="daySelect">
+                    <!-- 动态填充1-31日 -->
+                </select>
+            </div>
+        </div>
+        
+        <div class="input-item">
+            <label>添加当日货品（可多次添加）</label>
+            <input type="text" id="goodsInput" placeholder="输入货品名称">
+            <button class="btn btn-sub" onclick="addGoods()">添加货品</button>
+        </div>
+        <div class="tag-group" id="tagBox"></div>
+        <button class="btn" onclick="saveAndNext()">保存并进入录入</button>
+        <button class="btn btn-sub" onclick="backToHome()">返回首页</button>
+    </div>
+
+    <!-- 页面2：详细录入 → 双模式可选 -->
+    <div class="page" id="page2">
+        <div class="title">房间货品录入</div>
+        <div class="input-item">
+            <label>🔹 自定义房间名称（填写则优先使用，不填则用下拉选择）</label>
+            <input type="text" id="roomName" placeholder="例如：物业办公室、储藏室、门卫室">
+        </div>
+        <div class="input-item" style="text-align:center; margin:10px 0;">
+            <label>🔸 或使用下拉选择房间（不填自定义名称时生效）</label>
+        </div>
+        
+        <div class="select-group">
+            <div class="select-item">
+                <label>小区</label>
+                <select id="areaSelect" onchange="updateBuildingSelect()">
+                    <option value="A区">A区</option>
+                    <option value="B区">B区</option>
+                    <option value="C区">C区</option>
+                    <option value="D区">D区</option>
+                </select>
+            </div>
+            <div class="select-item">
+                <label>楼栋</label>
+                <select id="buildingSelect">
+                    <!-- 动态填充楼栋 -->
+                </select>
+            </div>
+        </div>
+        
+        <div class="select-group">
+            <div class="select-item">
+                <label>楼层</label>
+                <select id="floorSelect">
+                    <!-- 动态填充1-29层 -->
+                </select>
+            </div>
+            <div class="select-item">
+                <label>房间</label>
+                <select id="roomSelect">
+                    <option value="01室">01室</option>
+                    <option value="02室">02室</option>
+                    <option value="03室">03室</option>
+                    <option value="04室">04室</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="goods-group" id="goodsGroup">
+            <div class="goods-row">
+                <select class="gSelect"></select>
+                <input type="number" class="gNum" placeholder="数量" min="1">
+            </div>
+        </div>
+        <button class="btn btn-sub" onclick="addRow()">添加一行货品</button>
+        <button class="btn" onclick="saveRoom()">保存当前房间</button>
+        <button class="btn btn-warm" onclick="showStats()">统计并查看</button>
+        <button class="btn" onclick="backToPage1()">返回上一页</button>
+        <button class="btn btn-sub" onclick="saveCurrentTask()">保存当前任务</button>
+        <button class="btn btn-del" onclick="backToHome()">返回首页</button>
+        
+        <!-- 已录入房间列表 -->
+        <div class="record-list" id="recordList"></div>
+    </div>
+
+    <!-- 页面3：统计 -->
+    <div class="page" id="page3">
+        <div class="title">数据统计结果</div>
+        <div class="table-box" id="tableBox"></div>
+        <button class="btn" onclick="doShare()">转发结果</button>
+        <button class="btn btn-sub" onclick="exportExcel()">导出Excel</button>
+        <button class="btn btn-warm" onclick="backToInput()">返回录入</button>
+        <button class="btn btn-del" onclick="backToHome()">返回首页</button>
+    </div>
+
+    <script>
+        // 全局数据：任务列表 + 当前任务
+        let taskManager = {
+            tasks: JSON.parse(localStorage.getItem('goodsTasks') || '[]'),
+            currentTask: {
+                id: '',
+                date: '',
+                goods: [],
+                records: []
+            }
+        };
+
+        // 初始化
+        window.onload = function () {
+            initSelects();
+            renderTaskList();
+        };
+
+        // 初始化所有下拉选择器
+        function initSelects() {
+            // 初始化年月日下拉
+            const yearSelect = document.getElementById('yearSelect');
+            const monthSelect = document.getElementById('monthSelect');
+            const daySelect = document.getElementById('daySelect');
+            
+            // 填充年份（2024-2030）
+            for (let i = 2024; i <= 2030; i++) {
+                yearSelect.add(new Option(i + '年', i + '年'));
+            }
+            
+            // 填充月份（1-12）
+            for (let i = 1; i <= 12; i++) {
+                monthSelect.add(new Option(i + '月', i + '月'));
+            }
+            
+            // 填充日期（1-31）
+            for (let i = 1; i <= 31; i++) {
+                daySelect.add(new Option(i + '日', i + '日'));
+            }
+            
+            // 初始化小区楼栋
+            updateBuildingSelect();
+            
+            // 初始化楼层（1-29）
+            const floorSelect = document.getElementById('floorSelect');
+            for (let i = 1; i <= 29; i++) {
+                floorSelect.add(new Option(i + '层', i + '层'));
+            }
+        }
+
+        // 根据小区更新楼栋下拉
+        function updateBuildingSelect() {
+            const area = document.getElementById('areaSelect').value;
+            const buildingSelect = document.getElementById('buildingSelect');
+            buildingSelect.innerHTML = '';
+            
+            let start, end;
+            switch (area) {
+                case 'A区': start = 43; end = 52; break;
+                case 'B区': start = 36; end = 42; break;
+                case 'C区': start = 21; end = 34; break;
+                case 'D区': start = 1; end = 20; break;
+            }
+            
+            for (let i = start; i <= end; i++) {
+                buildingSelect.add(new Option(i + '号楼', i + '号楼'));
+            }
+        }
+
+        // 创建新任务
+        function createNewTask() {
+            // 重置当前任务
+            taskManager.currentTask = {
+                id: Date.now().toString(),
+                date: '',
+                goods: [],
+                records: []
+            };
+            // 清空货品标签
+            document.getElementById('tagBox').innerHTML = '';
+            // 切换到页面1
+            showPage(1);
+        }
+
+        // 渲染任务列表
+        function renderTaskList() {
+            const taskList = document.getElementById('taskList');
+            if (taskManager.tasks.length === 0) {
+                taskList.innerHTML = `<div style="text-align:center; color:#999; padding:15px;">暂无历史任务</div>`;
+                return;
+            }
+            
+            taskList.innerHTML = taskManager.tasks.map(task => `
+                <div class="task-item">
+                    <div class="task-info">
+                        <div class="task-date">${task.date}</div>
+                        <div class="task-goods">货品：${task.goods.join('、') || '无'}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="task-btn task-edit" onclick="editTask('${task.id}')">编辑</button>
+                        <button class="task-btn task-delete" onclick="deleteTask('${task.id}')">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 编辑任务
+        function editTask(taskId) {
+            const task = taskManager.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            
+            // 设置当前任务
+            taskManager.currentTask = JSON.parse(JSON.stringify(task));
+            
+            // 填充日期选择
+            const [year, month, day] = task.date.split(/年|月|日/).filter(Boolean);
+            document.getElementById('yearSelect').value = year + '年';
+            document.getElementById('monthSelect').value = month + '月';
+            document.getElementById('daySelect').value = day + '日';
+            
+            // 渲染货品标签
+            renderTags();
+            
+            // 切换到录入页面
+            showPage(2);
+            refreshSelect();
+            renderRecordList();
+        }
+
+        // 删除任务
+        function deleteTask(taskId) {
+            if (!confirm('确定删除该任务吗？删除后无法恢复！')) return;
+            
+            taskManager.tasks = taskManager.tasks.filter(t => t.id !== taskId);
+            localStorage.setItem('goodsTasks', JSON.stringify(taskManager.tasks));
+            renderTaskList();
+        }
+
+        // 添加当日货品
+        function addGoods() {
+            let val = document.getElementById("goodsInput").value.trim();
+            if (!val || taskManager.currentTask.goods.includes(val)) return;
+            
+            taskManager.currentTask.goods.push(val);
+            renderTags();
+            document.getElementById("goodsInput").value = "";
+        }
+
+        // 删除货品
+        function deleteGoods(name) {
+            if (isGoodsUsed(name)) {
+                alert(`货品【${name}】已使用，无法删除！`);
+                return;
+            }
+            taskManager.currentTask.goods = taskManager.currentTask.goods.filter(g => g !== name);
+            renderTags();
+        }
+
+        // 检查货品是否被使用
+        function isGoodsUsed(name) {
+            for (let r of taskManager.currentTask.records) {
+                for (let it of r.items) {
+                    if (it.name === name) return true;
+                }
+            }
+            return false;
+        }
+
+        // 渲染货品标签（带删除按钮）
+        function renderTags() {
+            let box = document.getElementById("tagBox");
+            box.innerHTML = taskManager.currentTask.goods.map(g => `
+                <span class="tag">
+                    ${g}
+                    <button class="del-btn" onclick="deleteGoods('${g}')">×</button>
+                </span>
+            `).join("");
+        }
+
+        // 保存并下一步
+        function saveAndNext() {
+            if (taskManager.currentTask.goods.length === 0) return alert("请至少添加一个货品");
+            
+            // 获取选中的日期
+            const year = document.getElementById('yearSelect').value;
+            const month = document.getElementById('monthSelect').value;
+            const day = document.getElementById('daySelect').value;
+            taskManager.currentTask.date = year + month + day;
+            
+            showPage(2);
+            refreshSelect();
+            renderRecordList();
+        }
+
+        // 刷新货品下拉框
+        function refreshSelect() {
+            let sels = document.querySelectorAll(".gSelect");
+            sels.forEach(sel => {
+                sel.innerHTML = `<option value="">--选择货品--</option>` +
+                    taskManager.currentTask.goods.map(g => `<option value="${g}">${g}</option>`).join("");
+            });
+        }
+
+        // 添加货品行
+        function addRow() {
+            let g = document.createElement("div");
+            g.className = "goods-row";
+            g.innerHTML = `
+                <select class="gSelect"></select>
+                <input type="number" class="gNum" placeholder="数量" min="1">
+            `;
+            document.getElementById("goodsGroup").appendChild(g);
+            refreshSelect();
+        }
+
+        // 保存房间 → 双模式智能判断
+        function saveRoom() {
+            let customName = document.getElementById("roomName").value.trim();
+            let wheelAddr = document.getElementById('areaSelect').value + 
+                            document.getElementById('buildingSelect').value + 
+                            document.getElementById('floorSelect').value + 
+                            document.getElementById('roomSelect').value;
+            
+            let finalAddr = customName || wheelAddr;
+            
+            let rows = document.querySelectorAll(".goods-row");
+            let items = [];
+            rows.forEach(r => {
+                let name = r.querySelector(".gSelect").value;
+                let num = parseInt(r.querySelector(".gNum").value) || 0;
+                if (name && num > 0) items.push({ name, num });
+            });
+            
+            if (items.length === 0) return alert("请填写完整货品信息");
+            
+            taskManager.currentTask.records.push({ addr: finalAddr, items });
+            alert("保存成功！");
+            
+            document.getElementById("roomName").value = "";
+            document.getElementById("goodsGroup").innerHTML = `
+                <div class="goods-row">
+                    <select class="gSelect"></select>
+                    <input type="number" class="gNum" placeholder="数量" min="1">
+                </div>
+            `;
+            refreshSelect();
+            renderRecordList(); // 刷新列表
+        }
+
+        // 渲染已录入房间列表（按录入时间顺序）
+        function renderRecordList() {
+            let list = document.getElementById("recordList");
+            if (taskManager.currentTask.records.length === 0) {
+                list.innerHTML = `<div style="text-align:center; color:#999; padding:15px;">暂无录入房间</div>`;
+                return;
+            }
+            list.innerHTML = taskManager.currentTask.records.map((record, index) => `
+                <div class="record-item">
+                    <button class="record-del" onclick="deleteRecord(${index})">×</button>
+                    <div class="record-info">
+                        <div class="record-addr">${record.addr}</div>
+                        <div class="record-goods">${record.items.map(it => `${it.name} × ${it.num}`).join('  ')}</div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // 删除单条房间记录
+        function deleteRecord(index) {
+            if (!confirm("确定删除该房间记录吗？")) return;
+            taskManager.currentTask.records.splice(index, 1);
+            renderRecordList();
+        }
+
+        // 智能排序：自定义 → A→B→C→D → 楼号/楼层/房间 从小到大
+        function sortRecords() {
+            const areaOrder = { 'A区': 1, 'B区': 2, 'C区': 3, 'D区': 4 };
+            taskManager.currentTask.records.sort((a, b) => {
+                const aIsCustom = !/^[A-D]区\d+号楼\d+层\d+室$/.test(a.addr);
+                const bIsCustom = !/^[A-D]区\d+号楼\d+层\d+室$/.test(b.addr);
+                if (aIsCustom && !bIsCustom) return -1;
+                if (!aIsCustom && bIsCustom) return 1;
+                if (aIsCustom && bIsCustom) return a.addr.localeCompare(b.addr);
+                const aArea = a.addr.match(/^[A-D]区/)[0];
+                const bArea = b.addr.match(/^[A-D]区/)[0];
+                if (areaOrder[aArea] !== areaOrder[bArea]) {
+                    return areaOrder[aArea] - areaOrder[bArea];
+                }
+                const aBuild = parseInt(a.addr.match(/(\d+)号楼/)[1]);
+                const bBuild = parseInt(b.addr.match(/(\d+)号楼/)[1]);
+                if (aBuild !== bBuild) return aBuild - bBuild;
+                const aFloor = parseInt(a.addr.match(/(\d+)层/)[1]);
+                const bFloor = parseInt(b.addr.match(/(\d+)层/)[1]);
+                if (aFloor !== bFloor) return aFloor - bFloor;
+                const aRoom = parseInt(a.addr.match(/(\d+)室/)[1]);
+                const bRoom = parseInt(b.addr.match(/(\d+)室/)[1]);
+                return aRoom - bRoom;
+            });
+        }
+
+        // 显示统计
+        function showStats() {
+            if (taskManager.currentTask.records.length === 0) return alert("暂无录入数据");
+            
+            sortRecords();
+            let totalMap = {};
+            taskManager.currentTask.records.forEach(r => {
+                r.items.forEach(it => {
+                    totalMap[it.name] = (totalMap[it.name] || 0) + it.num;
+                });
+            });
+            
+            let html = `<table>
+                <tr class="date-row"><td colspan="4">${taskManager.currentTask.date}</td></tr>
+                <tr><th>房间地址</th><th>货品明细</th><th>已送达</th><th>已付款</th></tr>`;
+            
+            taskManager.currentTask.records.forEach((r, rowIndex) => {
+                let txt = r.items.map(it => it.name + " × " + it.num).join("<br>");
+                html += `<tr>
+                    <td>${r.addr}</td>
+                    <td>${txt}</td>
+                    <td class="checkbox-cell"><input type="checkbox" id="deliver_${rowIndex}" onchange="saveCheckboxState()"></td>
+                    <td class="checkbox-cell"><input type="checkbox" id="pay_${rowIndex}" onchange="saveCheckboxState()"></td>
+                </tr>`;
+            });
+            
+            let totalText = Object.entries(totalMap).map(([k,v])=>`${k}：${v}`).join(" ｜ ");
+            html += `<tr class="total-row"><td colspan="4">货品总计：${totalText}</td></tr>`;
+            html += "</table>";
+            
+            document.getElementById("tableBox").innerHTML = html;
+            showPage(3);
+        }
+
+        // 保存勾选状态（简化版，实际可持久化）
+        function saveCheckboxState() {
+            // 可扩展：将勾选状态保存到currentTask中
+        }
+
+        // 分享
+        function doShare() {
+            let totalMap = {};
+            taskManager.currentTask.records.forEach(r => {
+                r.items.forEach(it => {
+                    totalMap[it.name] = (totalMap[it.name] || 0) + it.num;
+                });
+            });
+            let totalText = Object.entries(totalMap).map(([k,v])=>`${k}：${v}`).join(" ｜ ");
+            
+            let txt = `【货品统计】\n日期：${taskManager.currentTask.date}\n`;
+            taskManager.currentTask.records.forEach(r => {
+                txt += `${r.addr}：`;
+                r.items.forEach(it => txt += `${it.name}×${it.num} `);
+                txt += `\n`;
+            });
+            txt += `\n货品总计：${totalText}`;
+            
+            if (navigator.share) navigator.share({ title: "统计结果", text: txt });
+            else alert(txt);
+        }
+
+        // 导出Excel（CSV）
+        function exportExcel() {
+            let totalMap = {};
+            taskManager.currentTask.records.forEach(r => {
+                r.items.forEach(it => {
+                    totalMap[it.name] = (totalMap[it.name] || 0) + it.num;
+                });
+            });
+            let totalText = Object.entries(totalMap).map(([k,v])=>`${k}：${v}`).join(" | ");
+            
+            let csv = "\uFEFF日期,房间地址,货品名称,数量,已送达,已付款\n";
+            taskManager.currentTask.records.forEach((r, rowIndex) => {
+                r.items.forEach(it => {
+                    const deliver = document.getElementById(`deliver_${rowIndex}`)?.checked ? "√" : "";
+                    const pay = document.getElementById(`pay_${rowIndex}`)?.checked ? "√" : "";
+                    csv += `${taskManager.currentTask.date},${r.addr},${it.name},${it.num},${deliver},${pay}\n`;
+                });
+            });
+            // 添加总计行
+            csv += `,,,,,货品总计：${totalText}\n`;
+            
+            let blob = new Blob([csv], { type: "application/vnd.ms-excel" });
+            let a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = `货品统计_${taskManager.currentTask.date}.csv`;
+            a.click();
+        }
+
+        // 保存当前任务
+        function saveCurrentTask() {
+            if (!taskManager.currentTask.date) return alert("请先设置日期！");
+            if (taskManager.currentTask.goods.length === 0) return alert("请先添加货品！");
+            
+            // 检查是否已存在该任务，存在则更新，不存在则添加
+            const existIndex = taskManager.tasks.findIndex(t => t.id === taskManager.currentTask.id);
+            if (existIndex > -1) {
+                taskManager.tasks[existIndex] = JSON.parse(JSON.stringify(taskManager.currentTask));
+            } else {
+                taskManager.tasks.push(JSON.parse(JSON.stringify(taskManager.currentTask)));
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('goodsTasks', JSON.stringify(taskManager.tasks));
+            alert("任务保存成功！");
+            renderTaskList();
+        }
+
+        // 切换页面
+        function showPage(n) {
+            document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+            document.getElementById("page" + n).classList.add("active");
+        }
+
+        // 返回首页
+        function backToHome() {
+            showPage(0);
+            renderTaskList();
+        }
+
+        // 返回页面1
+        function backToPage1() {
+            showPage(1);
+        }
+
+        // 返回录入
+        function backToInput() {
+            showPage(2);
+        }
+    </script>
+</body>
+</html>
